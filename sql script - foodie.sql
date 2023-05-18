@@ -1,3 +1,4 @@
+-- I. Creating tables and populating them with data
 
 CREATE TABLE plans (
   plan_id INTEGER,
@@ -1023,9 +1024,9 @@ VALUES
   ('374', '2', '2020-06-15'),
   ('374', '4', '2020-09-21');
 
- -- Case Study Questions
+ -- II. Case Study Questions
 
- -- Find:
+ -- 1. Find:
 	-- a) first plan and
 	-- b) subscription date 
  -- for the customers with id: 1, 2, 11, 13, 15, 16, 18, 19
@@ -1033,42 +1034,46 @@ VALUES
  with CustomerSubscription as
  (
  select 
-		 customer_id,
-		 plan_name,
-		 price,
-		 [start_date],
-		 ROW_NUMBER() over (partition by customer_id order by start_date) as customer_listing
+	customer_id,
+	plan_name,
+	price,
+	[start_date],
+	ROW_NUMBER() over (partition by customer_id order by start_date) 
+	as customer_listing
  from subscriptions
  left join plans 
  on plans.plan_id = subscriptions.plan_id
  where customer_id IN (1, 2, 11, 13, 15, 16, 18, 19)
  )
  select 
-		customer_id,
-		plan_name,
-		[start_date]
+	customer_id,
+	plan_name,
+	[start_date]
  from CustomerSubscription
  where customer_listing = 1
  
- -- 1. How many customers has Foodie-Fi ever had?
+ -- 2. How many customers has Foodie-Fi ever had?
 
  select 
-		count(distinct customer_id) as number_of_customers
+	count(distinct customer_id) as number_of_customers
  from subscriptions
 
- -- 2. What is the monthly distribution of trial plan 'start_date' values?
+ -- 3. What is the monthly distribution of trial plan 'start_date' values?
 
  select
-		 DATEPART(month,start_date) as month_number,
-		 count(*) as trial_plan_count
+	DATEPART(month,start_date) as month_number,
+	count(*) as trial_plan_count
  from subscriptions
  where plan_id = 0 
  group by DATEPART(month,start_date)
  order by DATEPART(month,start_date)
 
--- 3. Which plans were chosen after 2020? 
--- Which plan was the most popular?
--- Show the breakdown by count of plans for each plan_name
+-- 4. 
+-- a) which plans were chosen after 2020? 
+-- b) show the breakdown by count of plans for each plan_name;
+-- c) which plan was the most popular?
+
+-- 4a.
 
 select 
 		plan_name,
@@ -1080,8 +1085,7 @@ where [start_date] > '2020-12-31'
 group by plan_name
 order by COUNT(*) desc
 
--- Show the breakdown by count of plans for each plan for all years
---Which plan was the most popular?
+-- 4b. and 4c.
 
 select 
 		plan_name,
@@ -1092,47 +1096,53 @@ on plans.plan_id = subscriptions.plan_id
 group by plan_name
 order by count(*) desc
 
--- 4. What is the customer count and percentage of customers who have churned rounded to 1 decimal place?
+-- 5. What is the customer count and percentage of customers who have churned rounded to 1 decimal place?
 
 select
-		count(case 
-					when plan_id = 4 
-					then 1 
-					end) as customers_churned,
-		round((cast(count(case 
-								when plan_id = 4 
-								then 1 
-								end) as float)
-		/cast(count(distinct customer_id) as float) * 100),1) as churn_percentage
+	count(case 
+			when plan_id = 4 
+			then 1 
+			end) 
+			as customers_churned,
+	round((cast(count(case 
+				when plan_id = 4 
+				then 1 
+				end) 
+				as float)
+	/cast(count(distinct customer_id) as float) * 100),1) 
+	as churn_percentage
 from subscriptions
 
--- 5. How many customers have churned straight after their initial free trial?
--- What percentage is this rounded to the nearest whole number?
+-- 6. How many customers have churned straight after their initial free trial?
+--    What percentage is this rounded to the nearest whole number?
 
 with CustomerPlan as
 (
 select 
-		customer_id,
-		plan_id,
-		LEAD(plan_id) over (partition by customer_id order by customer_id) as next_plan
+	customer_id,
+	plan_id,
+	LEAD(plan_id) over (partition by customer_id order by customer_id) 
+	as next_plan
 from subscriptions
 )
 select 
-		count(case 
-					when plan_id = 0 
-					AND next_plan = 4 
-					then 1 
-					end) as customers_churned,
-		round(cast(count(case 
-								when plan_id = 0 
-								AND next_plan = 4 
-								then 1 
-								end) as float) 
-		/cast(count(*) as float) * 100,0) as churn_percentage
+	count(case 
+			when plan_id = 0 
+			AND next_plan = 4 
+			then 1 
+			end) 
+			as customers_churned,
+	round(cast(count(case 
+				when plan_id = 0 
+				AND next_plan = 4 
+				then 1 
+				end) 
+				as float) 
+		/cast(count(*) as float) * 100, 0) 
+		as churn_percentage
 from CustomerPlan
 
--- 6. What is the number and percentage of customer plans after their initial free trial?
--- add decimal points to percentage
+-- 7. What is the number and percentage of customer plans after their initial free trial?
 
 with PlansAfterTrial as
 (
@@ -1140,24 +1150,26 @@ select
 	case 
 		when plan_id = 0 
 		then LEAD(plan_id) over (partition by customer_id order by customer_id) 
-		end as plan_after_trial
+		end 
+		as plan_after_trial
 from subscriptions 
 )
 select 
-		plan_after_trial,
-		count(*) as plans_count,
-		count(*) * 100.0/sum(count(*)) over () as [percentage]
+	plan_after_trial,
+	count(*) as plans_count,
+	count(*) * 100.0/sum(count(*)) over () 
+	as [percentage]
 from PlansAfterTrial 
 where plan_after_trial is not null
 group by plan_after_trial
 
--- 7. What is the customer count and percentage breakdown of all plan_name values till 2020-12-31?
--- add decimal points to percentage
+-- 8. What is the customer count and percentage breakdown of all plan_name values till 2020-12-31?
 
 select 
-		plan_name,
-		count(plan_name) as customer_count,
-		count(plan_name) * 100.0/sum(count(*)) over () as perc 
+	plan_name,
+	count(plan_name) as customer_count,
+	count(plan_name) * 100.0/sum(count(*)) over () 
+	as perc 
 from subscriptions s
 inner join plans p
 on s.plan_id = p.plan_id
@@ -1165,99 +1177,53 @@ where start_date <= '2020-12-31'
 group by plan_name
 order by 2 desc
 
--- 8. How many customers have upgraded to an annual plan in 2020?
+-- 9. How many customers have upgraded to an annual plan in 2020?
 
 select 
-		count(distinct customer_id) as customers_count
+	count(distinct customer_id) as customers_count
 from subscriptions as s
 inner join plans as p 
 on s.plan_id = p.plan_id
 where start_date between '2020-01-01' AND '2020-12-31'
 AND plan_name like '%annual%'
 
--- 9. How many days on average does it take for a customer to join an annual plan from the day 
--- they join Foodie-Fi?
+-- 10. How many days on average does it take for a customer to join an annual plan from the day they join Foodie-Fi?
 
 select 
-		avg(DATEDIFF(day,join_date,annual_plan_date)) as avg_days
+	avg(DATEDIFF(day,join_date,annual_plan_date)) as avg_days
 from
 (
 select 
-		customer_id,
-		FIRST_VALUE(start_date) over (partition by customer_id order by start_date) as join_date,
+	customer_id,
+	FIRST_VALUE(start_date) over (partition by customer_id order by start_date) 
+	as join_date,
 case 
 	when plan_name = 'pro annual' 
 	then [start_date]
-	end as annual_plan_date
+	end 
+	as annual_plan_date
 from subscriptions as s
 inner join plans as p
 on p.plan_id = s.plan_id
 ) as dates
-
--- 10. How many customers joined annual plan in each of the 30 day periods(counted from the joining Foodie)?
--- (i.e. 0-30 days, 31-60 days etc)
-
-With JoinToPro as 
-(
-select 
-		customer_id,
-		FIRST_VALUE(start_date) over (partition by customer_id order by start_date) as join_date,
-case 
-	when plan_name = 'pro annual' 
-	then start_date
-	end as annual_plan_date
-from subscriptions as s
-inner join plans as p
-on p.plan_id = s.plan_id) as dates
-where annual_plan_date is not null
-),
-DatesJoinPro
-(
-select
-	DATEDIFF(day, join_date, annual_plan_date) as days_dif,
-from JoinToPro
-)
-select 
-	join_date,
-	annual_plan_date
 
 -- 11. How many customers upgraded from pro monthly to basic monthly plan in 2020?
 
 with ProToBasic as
 (
 select 
-		customer_id,
-		[start_date],
-		plan_name,
-		LEAD(plan_name) over (partition by customer_id order by [start_date]) as next_plan
+	customer_id,
+	[start_date],
+	plan_name,
+	LEAD(plan_name) over (partition by customer_id order by [start_date]) 
+	as next_plan
 from subscriptions as s
 inner join plans as p
 on s.plan_id = p.plan_id
 )
 select 
-		count(customer_id) as customer_count
+	count(customer_id) as customer_count
 from ProToBasic
 where plan_name like '%basic monthly%'
 AND next_plan like '%pro monthly%'
 AND datepart(year,[start_date]) = '2020' 
-
--- 12. Create a new payments table for the year 2020 that includes amounts paid by each customer 
--- in the subscriptions table with the following requirements:
-
--- monthly payments always occur on the same day of month as the original 'start_date' of any monthly paid plan,
--- upgrades from basic to monthly or pro plans are reduced by the current paid amount in that month and start immediately,
--- upgrades from pro monthly to pro annual are paid at the end of the current billing period and also starts at the end of the month period,
--- once a customer churns they will no longer make payments
-
-select * from plans
-
-select 
-	customer_id,
-	plan_name,
-	[start_date],
-	
-from subscriptions as sub
-inner join plans 
-on sub.plan_id = plans.plan_id
-where plan_name not IN ('trial')
-order by customer_id
