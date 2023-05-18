@@ -1070,8 +1070,8 @@ VALUES
 
 -- 4. 
 -- a) which plans were chosen after 2020? 
--- b) show the breakdown by count of plans for each plan_name;
--- c) which plan was the most popular?
+-- b) show count of plans for entire period;
+-- c) which plan was most popular?
 
 -- 4a.
 
@@ -1085,16 +1085,26 @@ where [start_date] > '2020-12-31'
 group by plan_name
 order by COUNT(*) desc
 
--- 4b. and 4c.
+-- 4b.
 
 select 
+	plan_name,
+	count(*) as plans_count
+from subscriptions
+inner join plans
+on plans.plan_id = subscriptions.plan_id
+group by plan_name
+
+-- 4c.
+
+select top 1
 		plan_name,
 		count(*) as plans_count
 from subscriptions
 inner join plans
 on plans.plan_id = subscriptions.plan_id
 group by plan_name
-order by count(*) desc
+order by 2 desc
 
 -- 5. What is the customer count and percentage of customers who have churned rounded to 1 decimal place?
 
@@ -1155,21 +1165,21 @@ select
 from subscriptions 
 )
 select 
-	plan_after_trial,
+	plan_name,
 	count(*) as plans_count,
-	count(*) * 100.0/sum(count(*)) over () 
-	as [percentage]
-from PlansAfterTrial 
-where plan_after_trial is not null
-group by plan_after_trial
+	count(*) * 100.0/sum(count(*)) over () as [percentage]
+from PlansAfterTrial pt
+inner join plans pl
+on pt.plan_after_trial = pl.plan_id
+where plan_name NOT LIKE 'trial'
+group by plan_name
 
--- 8. What is the customer count and percentage breakdown of all plan_name values till 2020-12-31?
+-- 8. What is the customer count and percentage breakdown of all plans till 2020-12-31?
 
 select 
 	plan_name,
 	count(plan_name) as customer_count,
-	count(plan_name) * 100.0/sum(count(*)) over () 
-	as perc 
+	count(plan_name) * 100/sum(count(*)) over () as [percentage] 
 from subscriptions s
 inner join plans p
 on s.plan_id = p.plan_id
