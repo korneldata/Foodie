@@ -34,4 +34,45 @@ In my queries I reached out for the following SQL Server functions and commands:
 Credits to Data With Danny for preparing dataset and case study questions (https://8weeksqlchallenge.com/case-study-3/).
 
 These are tables containing project data:
-![tables](https://github.com/korneldata/Foodie/blob/95ba7a388da79b45d5abbef25a3e0ad475fec62a/tables.jpg)
+![tables](https://github.com/korneldata/Foodie/blob/2fe8c68f8793f1177db4ad6ccc4f699757d34b79/tables.jpg)
+
+Answer to question 1:
+![Q1](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q1.jpg)
+
+Output result for question 2:
+![Q2](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q2.jpg)
+
+Answer to question 3:
+![Q3](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q3.jpg)
+
+Answer to question 4A:
+![Q4A](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q4A.jpg)
+
+Answer to question 4B:
+![Q4B](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q4B.jpg)
+
+Answer to question 4C:
+![Q4C](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q4C.jpg)
+
+Answer to question 5:
+![Q5](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q5.jpg)
+
+Answer to question 6:
+![Q6](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q6.jpg)
+
+Answer to question 7:
+![Q7](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q7.jpg)
+
+Answer to question 8:
+![Q8](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q8.jpg)
+
+Answer to question 9:
+![Q9](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q9.jpg)
+
+Answer to question 10:
+![Q10](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q10.jpg)
+
+Answer to question 11:
+![Q11](https://github.com/korneldata/Foodie/blob/0278c7ee7b4babc46d49e7b74c0dfcf48dc5b074/Q11.jpg)
+
+
