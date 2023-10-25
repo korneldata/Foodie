@@ -1031,42 +1031,42 @@ VALUES
 	-- b) subscription date 
  -- for the customers with id: 1, 2, 11, 13, 15, 16, 18, 19
 
- with CustomerSubscription as
- (
- select 
+WITH CustomerSubscription AS
+(
+SELECT 
 	customer_id,
 	plan_name,
 	price,
 	[start_date],
-	ROW_NUMBER() over (partition by customer_id order by start_date) 
-	as customer_listing
- from subscriptions
- left join plans 
- on plans.plan_id = subscriptions.plan_id
- where customer_id IN (1, 2, 11, 13, 15, 16, 18, 19)
+	ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY start_date) 
+	AS customer_listing
+ FROM subscriptions
+ LEFT JOIN plans 
+ ON plans.plan_id = subscriptions.plan_id
+ WHERE customer_id IN (1, 2, 11, 13, 15, 16, 18, 19)
  )
- select 
+ SELECT 
 	customer_id,
 	plan_name,
 	[start_date]
- from CustomerSubscription
- where customer_listing = 1
+ FROM CustomerSubscription
+ WHERE customer_listing = 1
  
  -- 2. How many customers has Foodie-Fi ever had?
 
- select 
-	count(distinct customer_id) as number_of_customers
- from subscriptions
+ SELECT 
+	COUNT(DISTINCT customer_id) AS number_of_customers
+ FROM subscriptions
 
  -- 3. What is the monthly distribution of trial plan 'start_date' values?
 
- select
-	DATEPART(month,start_date) as month_number,
-	count(*) as trial_plan_count
- from subscriptions
- where plan_id = 0 
- group by DATEPART(month,start_date)
- order by DATEPART(month,start_date)
+ SELECT
+	DATEPART(MONTH, start_date) as month_number,
+	COUNT(*) AS trial_plan_count
+ FROM subscriptions
+ WHERE plan_id = 0 
+ GROUP BY DATEPART(MONTH,start_date)
+ ORDER BY DATEPART(MONTH,start_date)
 
 -- 4. 
 -- a) which plans were chosen after 2020? 
@@ -1075,165 +1075,137 @@ VALUES
 
 -- 4a.
 
-select 
-		plan_name,
-		COUNT(*) as plans_count
-from plans as p
-inner join subscriptions as s
-on p.plan_id = s.plan_id
-where [start_date] > '2020-12-31'
-group by plan_name
-order by COUNT(*) desc
+SELECT 
+	plan_name,
+	COUNT(*) AS plans_count
+FROM plans AS p
+INNER JOIN subscriptions AS s
+ON p.plan_id = s.plan_id
+WHERE [start_date] > '2020-12-31'
+GROUP BY plan_name
+ORDER BY COUNT(*) DESC
 
 -- 4b.
 
-select 
+SELECT 
 	plan_name,
-	count(*) as plans_count
-from subscriptions
-inner join plans
-on plans.plan_id = subscriptions.plan_id
-group by plan_name
+	COUNT(*) AS plans_count
+FROM subscriptions
+INNER JOIN plans
+ON plans.plan_id = subscriptions.plan_id
+GROUP BY plan_name
 
 -- 4c.
 
-select top 1
-		plan_name,
-		count(*) as plans_count
-from subscriptions
-inner join plans
-on plans.plan_id = subscriptions.plan_id
-group by plan_name
-order by 2 desc
+SELECT top 1
+	plan_name,
+	COUNT(*) AS plans_count
+FROM subscriptions
+INNER JOIN plans
+ON plans.plan_id = subscriptions.plan_id
+GROUP BY plan_name
+ORDER BY 2 DESC
 
 -- 5. What is the customer count and percentage of customers who have churned rounded to 1 decimal place?
 
-select
-	count(case 
-			when plan_id = 4 
-			then 1 
-			end) 
-			as customers_churned,
-	round((cast(count(case 
-				when plan_id = 4 
-				then 1 
-				end) 
-				as float)
-	/cast(count(distinct customer_id) as float) * 100),1) 
-	as churn_percentage
-from subscriptions
+SELECT
+	COUNT(CASE WHEN plan_id = 4 THEN 1 END) AS customers_churned,
+	ROUND((CAST(COUNT(CASE WHEN plan_id = 4 THEN 1 END) AS float)
+	/ CAST(COUNT(DISTINCT customer_id) AS float) * 100),1) AS churn_percentage
+FROM subscriptions
 
 -- 6. How many customers have churned straight after their initial free trial?
 --    What percentage is this rounded to the nearest whole number?
 
-with CustomerPlan as
+WITH CustomerPlan AS
 (
-select 
+SELECT 
 	customer_id,
 	plan_id,
-	LEAD(plan_id) over (partition by customer_id order by customer_id) 
-	as next_plan
-from subscriptions
+	LEAD(plan_id) OVER (PARTITION BY customer_id ORDER BY customer_id) 
+	AS next_plan
+FROM subscriptions
 )
-select 
-	count(case 
-			when plan_id = 0 
-			AND next_plan = 4 
-			then 1 
-			end) 
-			as customers_churned,
-	round(cast(count(case 
-				when plan_id = 0 
-				AND next_plan = 4 
-				then 1 
-				end) 
-				as float) 
-		/cast(count(*) as float) * 100, 0) 
-		as churn_percentage
-from CustomerPlan
+SELECT 
+	COUNT(CASE WHEN plan_id = 0 AND next_plan = 4 THEN 1 END) AS customers_churned,
+	ROUND(CAST(COUNT(CASE WHEN plan_id = 0 AND next_plan = 4 THEN 1 END) AS float) 
+	/CAST(COUNT(*) AS float) * 100, 0) AS churn_percentage
+FROM CustomerPlan
 
 -- 7. What is the number and percentage of customer plans after their initial free trial?
 
-with PlansAfterTrial as
+WITH PlansAfterTrial AS
 (
-select 
-	case 
-		when plan_id = 0 
-		then LEAD(plan_id) over (partition by customer_id order by customer_id) 
-		end 
-		as plan_after_trial
-from subscriptions 
+SELECT 
+	CASE WHEN plan_id = 0 THEN LEAD(plan_id) OVER (PARTITION BY customer_id ORDER BY customer_id) END AS plan_after_trial
+FROM subscriptions 
 )
-select 
+SELECT 
 	plan_name,
-	count(*) as plans_count,
-	count(*) * 100.0/sum(count(*)) over () as [percentage]
-from PlansAfterTrial pt
-inner join plans pl
-on pt.plan_after_trial = pl.plan_id
-where plan_name NOT LIKE 'trial'
-group by plan_name
+	COUNT(*) AS plans_count,
+	COUNT(*) * 100.0/SUM(COUNT(*)) OVER () AS [percentage]
+FROM PlansAfterTrial pt
+INNER JOIN plans pl
+ON pt.plan_after_trial = pl.plan_id
+WHERE plan_name NOT LIKE 'trial'
+GROUP BY plan_name
 
 -- 8. What is the customer count and percentage breakdown of all plans till 2020-12-31?
 
-select 
+SELECT 
 	plan_name,
-	count(plan_name) as customer_count,
-	count(plan_name) * 100/sum(count(*)) over () as [percentage] 
-from subscriptions s
-inner join plans p
-on s.plan_id = p.plan_id
-where start_date <= '2020-12-31'
-group by plan_name
-order by 2 desc
+	COUNT(plan_name) AS customer_count,
+	COUNT(plan_name) * 100/SUM(COUNT(*)) OVER () AS [percentage] 
+FROM subscriptions s
+INNER JOIN plans p
+ON s.plan_id = p.plan_id
+WHERE start_date <= '2020-12-31'
+GROUP BY plan_name
+ORDER BY 2 DESC
 
 -- 9. How many customers have upgraded to an annual plan in 2020?
 
-select 
-	count(distinct customer_id) as customers_count
-from subscriptions as s
-inner join plans as p 
-on s.plan_id = p.plan_id
-where start_date between '2020-01-01' AND '2020-12-31'
-AND plan_name like '%annual%'
+SELECT 
+	COUNT(DISTINCT customer_id) AS customers_count
+FROM subscriptions AS s
+INNER JOIN plans AS p 
+ON s.plan_id = p.plan_id
+WHERE start_date BETWEEN '2020-01-01' AND '2020-12-31'
+AND plan_name LIKE '%annual%'
 
 -- 10. How many days on average does it take for a customer to join an annual plan from the day they join Foodie-Fi?
 
-select 
-	avg(DATEDIFF(day,join_date,annual_plan_date)) as avg_days
-from
+SELECT 
+	AVG(DATEDIFF(DAY, join_date, annual_plan_date)) AS avg_days
+FROM
 (
-select 
+SELECT 
 	customer_id,
-	FIRST_VALUE(start_date) over (partition by customer_id order by start_date) 
-	as join_date,
-case 
-	when plan_name = 'pro annual' 
-	then [start_date]
-	end 
-	as annual_plan_date
-from subscriptions as s
-inner join plans as p
-on p.plan_id = s.plan_id
-) as dates
+	FIRST_VALUE(start_date) OVER (PARTITION BY customer_id ORDER BY start_date) 
+	AS join_date,
+CASE WHEN plan_name = 'pro annual' THEN [start_date] END AS annual_plan_date
+FROM subscriptions AS s
+INNER JOIN plans AS p
+ON p.plan_id = s.plan_id
+) AS dates
 
 -- 11. How many customers upgraded from pro monthly to basic monthly plan in 2020?
 
-with ProToBasic as
+WITH ProToBasic AS
 (
-select 
+SELECT 
 	customer_id,
 	[start_date],
 	plan_name,
-	LEAD(plan_name) over (partition by customer_id order by [start_date]) 
-	as next_plan
-from subscriptions as s
-inner join plans as p
-on s.plan_id = p.plan_id
+	LEAD(plan_name) OVER (PARTITION BY customer_id ORDER BY [start_date]) 
+	AS next_plan
+FROM subscriptions AS s
+INNER JOIN plans AS p
+ON s.plan_id = p.plan_id
 )
-select 
-	count(customer_id) as customer_count
-from ProToBasic
-where plan_name like '%basic monthly%'
-AND next_plan like '%pro monthly%'
-AND datepart(year,[start_date]) = '2020' 
+SELECT 
+	COUNT(customer_id) AS customer_count
+FROM ProToBasic
+WHERE plan_name LIKE '%basic monthly%'
+AND next_plan LIKE '%pro monthly%'
+AND DATEPART(YEAR,[start_date]) = '2020' 
